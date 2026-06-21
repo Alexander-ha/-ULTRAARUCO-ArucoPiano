@@ -97,7 +97,7 @@ ipconfig
 
 Перейдите в приложение camera_demo.apk, **которое вы скачали на ваш телефон**.
 
-[!изобр 3. меню](arcuopianoinstr/Screenshot_2026-06-21-23-10-56-646_com.example.flora_nano_aruco.jpg)
+![изобр 3. меню](arcuopianoinstr/Screenshot_2026-06-21-23-10-56-646_com.example.flora_nano_aruco.jpg)
 
 В приложении нажмите Connect to Local Server.
 
