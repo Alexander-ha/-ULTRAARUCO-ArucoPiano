@@ -39,6 +39,8 @@ git clone https://github.com/Alexander-ha/ArucoNanoPiano-2026-06-19_03-18-33.git
 ### Запуск тестового примера в UnityProject
 > 📌 **Примечание:** Эти процессы не обязательны, если уже и так понятно что делать: можно сразу перейти к [Документация по мосту Assets/UnityHTTPServer.cs](#bridgedoc),
 > чтобы использовать функции http-доступа, а также к  [Подключение в приложении к серверу](#serverconnect) и [Пример работы](#workexample).
+
+
 Если установка прошла успешно, то вы увидите следующее в поле сцены SampleScene:
 ![изобр. 1, сцена](arcuopianoinstr/inspectorinstr0.png)
 Здесь можно увидеть, что
