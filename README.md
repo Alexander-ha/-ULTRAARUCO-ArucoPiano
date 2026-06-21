@@ -201,5 +201,208 @@ json
 <a id="bridgedoc"></a>
 ### Документация по мосту Assets/UnityHTTPServer.cs
 Основной скрипт, позволяющий конфигурировать доступ по http валяется в assets, это UnityHTTPServer.cs. Он дает стандартный доступ к GET-запросам, наследуется от MonoBehaviour.
+## 📋 Публичные методы
+
+### `StartHTTPServer()`
+Запускает http-сервер на указанном порту.
+
+```csharp
+public void StartHTTPServer()
+```
+
+**Пример:**
+```csharp
+UnityHTTPServer server = GetComponent<UnityHTTPServer>();
+server.StartHTTPServer();
+```
+
+---
+
+### `ProcessReceivedData(string jsonData)`
+обрабатывает получаемый json, обновляет юзео-интерфейс (через переданные текстовые поля).
+
+```csharp
+public void ProcessReceivedData(string jsonData)
+```
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `jsonData` | `string` | JSON-строка с данными жестов |
+
+**Пример:**
+```csharp
+server.ProcessReceivedData("{\"left_hand\":{\"corners\":[{\"x\":100,\"y\":200}]}}");
+```
+
+---
+
+### `UpdateUI(RootObject data)`
+Обновляет все UI-элементы на основе полученных данных.
+
+```csharp
+public void UpdateUI(RootObject data)
+```
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `data` | `RootObject` | Десериализованный объект с данными |
+
+---
+
+### `CalculateCenter(List<Corner> corners)`
+Вычисляет центр объекта по списку угловых точек. (может сгодиться для позиционирования.)
+
+```csharp
+public Vector2 CalculateCenter(List<Corner> corners)
+```
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `corners` | `List<Corner>` | Список точек (x, y) |
+
+**Возвращает:** `Vector2` — центр объекта.
+
+**Пример:**
+```csharp
+Vector2 center = CalculateCenter(handData.corners);
+Debug.Log($"Центр: ({center.x}, {center.y})");
+```
+
+---
+
+### `GetLocalIPAddress()`
+Получает локальный IP-адрес компьютера (авто-конфиг айпишника).
+
+```csharp
+public string GetLocalIPAddress()
+```
+
+**Возвращает:** `string` — IP-адрес (например, `192.168.1.100`).
+
+**Пример:**
+```csharp
+string ip = GetLocalIPAddress();
+statusText.text = $"Сервер: http://{ip}:8080/";
+```
+
+---
+
+## 🔒 Приватные методы
+
+| Метод | Описание |
+|-------|----------|
+| `HandleRequests()` | корутина для асинхронной обработки запросов |
+| `ProcessRequest(IAsyncResult result)` | обработка на входящий HTTP-запрос |
+| `Update()` | апдейт каждый кадр |
+
+---
+
+## 📦 вложенные классы
+
+### `Corner`
+точка.
+
+```csharp
+public class Corner
+{
+    public float x;
+    public float y;
+}
+```
+
+### `HandData`
+рука.
+
+```csharp
+public class HandData
+{
+    public int id;
+    public List<Corner> corners;
+}
+```
+
+### `PianoData`
+пиаинино.
+
+```csharp
+public class PianoData
+{
+    public int id;
+    public List<Corner> corners;
+}
+```
+
+### `KeyData`
+клавиша.
+
+```csharp
+public class KeyData
+{
+    public int id;
+    public List<Corner> corners;
+}
+```
+
+### `ExtraKeys`
+контейнер для клавиш.
+
+```csharp
+public class ExtraKeys
+{
+    public KeyData key_1;
+    public KeyData key_2;
+    // ... до key_10
+}
+```
+
+### `RootObject`
+корень JSON.
+
+```csharp
+public class RootObject
+{
+    public HandData left_hand;
+    public HandData right_hand;
+    public PianoData piano;
+    public ExtraKeys extra_keys;
+}
+```
+
+---
+
+## 🎯 Пример использования
+
+```csharp
+// получение сервера
+UnityHTTPServer server = GetComponent<UnityHTTPServer>();
+
+// запуск его с текущими параметрами
+server.StartHTTPServer();
+
+// геттер на апйишник (можем получить )
+string ip = server.GetLocalIPAddress();
+Debug.Log($"Сервер запущен на {ip}:8080");
+
+// ручная десериализация
+string json = "{\"left_hand\":{\"corners\":[{\"x\":100,\"y\":200}]}}";
+server.ProcessReceivedData(json);
+
+// барицентр
+List<Corner> corners = new List<Corner>();
+corners.Add(new Corner { x = 0, y = 0 });
+corners.Add(new Corner { x = 100, y = 100 });
+Vector2 center = server.CalculateCenter(corners);
+Debug.Log($"Центр: {center}");
+```
+
+---
+
+## ⚡ Unity-события
+дефолтные события
+| Событие | Когда вызывается |
+|---------|------------------|
+| `Start()` | запустилась сцена - запустился сервер |
+| `Update()` | Каждый кадр — обрабатывает полученные данные |
+| `OnDestroy()` | стоп - уничтожение объекта сервера из памяти|
 
 
