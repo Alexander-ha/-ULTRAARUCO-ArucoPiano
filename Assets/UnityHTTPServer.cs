@@ -25,6 +25,12 @@ public class UnityHTTPServer : MonoBehaviour
     private string lastData = "";
     private string clientIP = "";
 
+    // --- Additive hook for 3D visualization (does not change existing UI behaviour) ---
+    /// <summary>Latest successfully-parsed payload. Null until the first valid message.</summary>
+    public RootObject LatestData { get; private set; }
+    /// <summary>Raised on the main thread each time a new payload is parsed.</summary>
+    public event System.Action<RootObject> OnDataUpdated;
+
     [System.Serializable]
     public class Corner { public float x; public float y; }
     [System.Serializable]
@@ -92,7 +98,9 @@ public class UnityHTTPServer : MonoBehaviour
                 IAsyncResult result = listener.BeginGetContext(ProcessRequest, listener);
                 yield return new WaitUntil(() => result.IsCompleted);
             }
-            yield return new WaitForSeconds(0.1f);
+            // Process the next request on the following frame (~60 Hz) instead of throttling
+            // to 10 Hz, which removes most of the visible input lag.
+            yield return null;
         }
     }
 
@@ -149,6 +157,10 @@ public class UnityHTTPServer : MonoBehaviour
         try
         {
             var data = JsonConvert.DeserializeObject<RootObject>(jsonData);
+
+            // Expose the parsed data so other components (e.g. the 3D test) can react to it.
+            LatestData = data;
+            OnDataUpdated?.Invoke(data);
 
             if (statusText != null)
             {
