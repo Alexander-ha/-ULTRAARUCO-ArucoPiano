@@ -25,9 +25,11 @@ public static class PianoModelSceneBuilder
     const float CameraFov = 60f;
     const float CameraPitch = 70f;        // mostly top-down, angled so keys aren't hidden by the lid
 
-    // Two groups of 4 white + 1 black, one per octave/hand = 10 interactive keys (5 per hand).
-    const int GroupWhite = 4;
-    const int GroupBlack = 1;
+    // Interactive keys = two full octaves (24 keys), one per hand.
+    // 88-key piano: leftmost key (index 0) = A0 = MIDI 21.
+    const int MidiOfFirstKey = 21;
+    const int LowOctaveMidi = 48;   // малая октава = C3..B3
+    const int HighOctaveMidi = 72;  // вторая октава = C5..B5
 
     // Cover parts that hide the keys from above — hidden on build.
     static readonly string[] HideParts = { "Flatboard", "Felt" };
@@ -102,41 +104,26 @@ public static class PianoModelSceneBuilder
         center /= keys.Count;
         model.transform.localPosition -= center;            // keyboard centred at the root origin
 
-        // --- Pick 8 white + 2 black interactive keys, contiguous near the centre.
-        // Black keys are taller, so their top sits higher than the white keys.
-        var topY = new float[keys.Count];
-        for (int i = 0; i < keys.Count; i++)
+        // --- Interactive keys: малая октава (C3..B3) + вторая октава (C5..B5) = 24 keys.
+        int[] blackClasses = { 1, 3, 6, 8, 10 };
+        string[] noteNames = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
+        System.Func<int, int> midiOf = idx => MidiOfFirstKey + idx;
+        System.Func<int, bool> inOctaves = idx =>
         {
-            var r = keys[i].GetComponent<Renderer>();
-            topY[i] = r != null ? r.bounds.max.y : 0f;
-        }
-        float minTop = topY.Min(), maxTop = topY.Max();
-        float blackThreshold = minTop + (maxTop - minTop) * 0.5f;
-        System.Func<int, bool> isBlack = i => topY[i] > blackThreshold;
-
-        // Collect a group of (wantW white + wantB black) scanning right from 'start'.
-        System.Func<int, List<int>> collect = start =>
-        {
-            var g = new List<int>(); int w = 0, b = 0;
-            for (int i = Mathf.Clamp(start, 0, keys.Count - 1);
-                 i < keys.Count && (w < GroupWhite || b < GroupBlack); i++)
-            {
-                if (isBlack(i)) { if (b < GroupBlack) { g.Add(i); b++; } }
-                else { if (w < GroupWhite) { g.Add(i); w++; } }
-            }
-            return g;
+            int m = midiOf(idx);
+            return (m >= LowOctaveMidi && m < LowOctaveMidi + 12) ||
+                   (m >= HighOctaveMidi && m < HighOctaveMidi + 12);
         };
-
-        // Two groups about an octave apart -> one per hand (lower octave + upper octave).
-        int mid = keys.Count / 2;
-        var sel = collect(mid - 18).Concat(collect(mid + 2))
-            .Distinct().OrderBy(i => keys[i].localPosition.x).ToList();
-        int nWhite = sel.Count(i => !isBlack(i)), nBlack = sel.Count(isBlack);
+        var sel = Enumerable.Range(0, keys.Count).Where(inOctaves)
+                            .OrderBy(i => keys[i].localPosition.x).ToList();
 
         var interactive = new List<PianoKey3D>();
         foreach (int idx in sel)
         {
             var keyT = keys[idx];
+            int m = midiOf(idx);
+            bool black = System.Array.IndexOf(blackClasses, m % 12) >= 0;
+
             float pressSign = 1f;
             var mf = keyT.GetComponent<MeshFilter>();
             if (mf != null && mf.sharedMesh != null)
@@ -144,15 +131,33 @@ public static class PianoModelSceneBuilder
 
             var key = keyT.gameObject.AddComponent<PianoKey3D>();
             key.keyIndex = idx;
-            key.isBlack = isBlack(idx);
-            key.hingeAxis = Vector3.right;          // lateral axis = keyboard width
-            key.hingeOffsetLocal = Vector3.zero;    // origin is already at the rear hinge
-            key.pressAngle = (key.isBlack ? 9f : 7f) * pressSign;
-            key.useColorFeedback = true;            // no rest tint (keeps model colour); orange when pressed
+            key.isBlack = black;
+            key.interactive = true;
+            key.hingeAxis = Vector3.right;
+            key.hingeOffsetLocal = Vector3.zero;
+            key.pressAngle = (black ? 9f : 7f) * pressSign;
+            key.useColorFeedback = true;            // no rest tint; orange + glow when pressed
             key.pressedColor = new Color(1f, 0.45f, 0.1f);
+
+            // Note sound: "{Note}{Octave}.mp3" (e.g. C3, Db5).
+            string note = noteNames[m % 12] + (m / 12 - 1);
+            key.noteClip = AssetDatabase.LoadAssetAtPath<AudioClip>($"Assets/piano-mp3/{note}.mp3");
+            if (key.noteClip == null) Debug.LogWarning($"[ArucoPiano] sound not found: Assets/piano-mp3/{note}.mp3");
+
+            // Enable emission so the key can glow when pressed (add Bloom to a URP Volume for the bloom look).
+            var rend = keyT.GetComponent<Renderer>();
+            var rmat = rend != null ? rend.sharedMaterial : null;
+            if (rmat != null)
+            {
+                rmat.EnableKeyword("_EMISSION");
+                rmat.globalIlluminationFlags &= ~MaterialGlobalIlluminationFlags.EmissiveIsBlack;
+                EditorUtility.SetDirty(rmat);
+            }
             interactive.Add(key);
         }
         var markerKeys = sel.ToArray();
+        int nWhite = sel.Count(i => System.Array.IndexOf(blackClasses, midiOf(i) % 12) < 0);
+        int nBlack = sel.Count - nWhite;
 
         // --- Controller (no hands yet).
         var ctrlGo = new GameObject("ArucoKeyboardController");
@@ -165,6 +170,12 @@ public static class PianoModelSceneBuilder
         ctrl.zoneCenter = Vector3.zero;
         ctrl.zoneSize = ZoneSize;
         ctrl.handTravelHalfWidth = TargetWidth * 0.5f;
+        // Hand calibration anchors: where the малая / вторая octave centres sit (keyboard-local X).
+        var lowKeys = sel.Where(i => midiOf(i) < 60).ToList();   // малая (C3..B3)
+        var highKeys = sel.Where(i => midiOf(i) >= 72).ToList(); // вторая (C5..B5)
+        ctrl.leftAnchorX = lowKeys.Count > 0 ? lowKeys.Average(i => root.transform.InverseTransformPoint(keys[i].position).x) : -0.1f;
+        ctrl.rightAnchorX = highKeys.Count > 0 ? highKeys.Average(i => root.transform.InverseTransformPoint(keys[i].position).x) : 0.1f;
+        ctrl.handAnchorFraction = 0.3f;
         ctrl.heightMin = 0f;
         ctrl.heightMax = 0.2f;
         ctrl.useMarkerRotation = true;

@@ -45,7 +45,11 @@ public class UnityHTTPServer : MonoBehaviour
         public KeyData key_1; public KeyData key_2; public KeyData key_3;
         public KeyData key_4; public KeyData key_5; public KeyData key_6;
         public KeyData key_7; public KeyData key_8; public KeyData key_9;
-        public KeyData key_10;
+        public KeyData key_10; public KeyData key_11; public KeyData key_12;
+        public KeyData key_13; public KeyData key_14; public KeyData key_15;
+        public KeyData key_16; public KeyData key_17; public KeyData key_18;
+        public KeyData key_19; public KeyData key_20; public KeyData key_21;
+        public KeyData key_22; public KeyData key_23; public KeyData key_24;
     }
     [System.Serializable]
     public class RootObject

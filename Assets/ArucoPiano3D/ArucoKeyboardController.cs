@@ -13,6 +13,13 @@ using UnityEngine;
 /// </summary>
 public class ArucoKeyboardController : MonoBehaviour
 {
+    public enum ImageRotation { None, Rotate90, Rotate180, Rotate270 }
+
+    [Header("Image orientation")]
+    [Tooltip("Rotate marker coordinates to match your setup (portrait app filmed in landscape). " +
+             "Rotate90 ≈ 90° CCW; if movement is mirrored, try Rotate270 or the Invert X/Z flags.")]
+    public ImageRotation imageRotation = ImageRotation.Rotate90;
+
     [Header("Bridge (auto-found if empty)")]
     public UnityHTTPServer server;
     public Camera viewCamera; // optional; placement is world-space now and does not need it
@@ -28,6 +35,13 @@ public class ArucoKeyboardController : MonoBehaviour
     public float zoneSize = 1.0f;
     public bool invertX = false;
     public bool invertZ = false;
+    [Tooltip("Image Y that maps to the zone centre (0.5 = frame centre, 0.75 = 3/4 down). Vertical calibration.")]
+    [Range(0f, 1f)] public float verticalCenter = 0.75f;
+    [Tooltip("OFF = the piano stops following the marker's position and just sits at the centre " +
+             "(the marker is still tracked for presence and rotation).")]
+    public bool trackPianoPosition = true;
+    [Tooltip("Height the piano sits at when position tracking is OFF.")]
+    public float pianoRestHeight = 0.1f;
 
     [Header("Height = 3rd coordinate (from marker apparent size)")]
     public float nearSizePx = 220f;  // marker close (big)  -> heightMax
@@ -60,6 +74,18 @@ public class ArucoKeyboardController : MonoBehaviour
     public float handReach = 0.18f;
     public float handArriveThreshold = 0.03f;
 
+    [Header("Hand horizontal calibration (frame -> keyboard)")]
+    [Tooltip("Frame centre maps to piano centre; nudge left/right with this (fraction of the frame).")]
+    [Range(-0.5f, 0.5f)] public float handCenterOffset = 0f;
+    [Tooltip("Global fine-tune multiplier on the hand gain.")]
+    public float handSpanScale = 1f;
+    [Tooltip("Hand-marker frame fraction (from centre) at which a hand reaches its octave centre (~0.3 = 30%).")]
+    public float handAnchorFraction = 0.3f;
+    [Tooltip("Keyboard-local X the LEFT hand reaches at -anchorFraction (builder sets it = малая octave centre).")]
+    public float leftAnchorX = -0.1f;
+    [Tooltip("...the RIGHT hand at +anchorFraction (вторая octave centre).")]
+    public float rightAnchorX = 0.1f;
+
     [Header("Zone visual")]
     public bool showZone = true;
     public Color zoneColor = new Color(1f, 0.9f, 0.2f);
@@ -69,6 +95,7 @@ public class ArucoKeyboardController : MonoBehaviour
     bool[] _everSeen;
     float _minX = float.MaxValue, _maxX = float.MinValue;
     float _minY = float.MaxValue, _maxY = float.MinValue;
+    float _minHX = float.MaxValue, _maxHX = float.MinValue; // separate frame range for the hands
     bool _placed;
 
     float _leftFreeX, _rightFreeX;
@@ -132,8 +159,8 @@ public class ArucoKeyboardController : MonoBehaviour
             return;
         }
 
-        float lFree = ComputeFreeX(data.left_hand, ref _leftFreeX);
-        float rFree = ComputeFreeX(data.right_hand, ref _rightFreeX);
+        float lFree = ComputeFreeX(data.left_hand, ref _leftFreeX, leftAnchorX, -handAnchorFraction);
+        float rFree = ComputeFreeX(data.right_hand, ref _rightFreeX, rightAnchorX, handAnchorFraction);
 
         // Active keys = marker hidden (after first sighting). Hand them to the nearest hand in reach.
         if (markerKeyIndices != null)
@@ -144,6 +171,7 @@ public class ArucoKeyboardController : MonoBehaviour
                 if (visible) _everSeen[i] = true;
                 bool active = _everSeen[i] && !visible;
                 if (!active || !_byIndex.TryGetValue(markerKeyIndices[i], out var pk)) continue;
+                if (!pk.interactive) continue; // inspector toggle: disabled key
 
                 float keyX = KeyLocalX(pk);
                 float dl = lg != null ? Mathf.Abs(keyX - lg.CurrentLocalX) : float.MaxValue;
@@ -175,14 +203,22 @@ public class ArucoKeyboardController : MonoBehaviour
         _pianoCenter = Center(piano.corners);
         Feed(_pianoCenter);
 
-        float nx = NormalizeX(_pianoCenter.x);
-        float ny = NormalizeY(_pianoCenter.y);
-        float sizeT = Mathf.Clamp01(Mathf.InverseLerp(farSizePx, nearSizePx, ApparentSize(piano.corners)));
-
-        // Position inside the square zone (clamped by construction since nx,ny are 0..1).
-        float ox = (nx - 0.5f) * zoneSize; if (invertX) ox = -ox;
-        float oz = (0.5f - ny) * zoneSize; if (invertZ) oz = -oz;
-        Vector3 world = zoneCenter + new Vector3(ox, Mathf.Lerp(heightMin, heightMax, sizeT), oz);
+        Vector3 world;
+        if (trackPianoPosition)
+        {
+            // Position inside the square zone (clamped by construction since nx,ny are 0..1).
+            float nx = NormalizeX(_pianoCenter.x);
+            float ny = NormalizeY(_pianoCenter.y);
+            float sizeT = Mathf.Clamp01(Mathf.InverseLerp(farSizePx, nearSizePx, ApparentSize(piano.corners)));
+            float ox = (nx - 0.5f) * zoneSize; if (invertX) ox = -ox;
+            float oz = (verticalCenter - ny) * zoneSize; if (invertZ) oz = -oz;
+            world = zoneCenter + new Vector3(ox, Mathf.Lerp(heightMin, heightMax, sizeT), oz);
+        }
+        else
+        {
+            // Not tracking position: just sit at the centre (marker still tracked for presence/rotation).
+            world = zoneCenter + Vector3.up * pianoRestHeight;
+        }
 
         if (!_placed) { pianoRoot.position = world; _placed = true; }
         else pianoRoot.position = Vector3.Lerp(pianoRoot.position, world, 1f - Mathf.Exp(-positionSmoothing * Time.deltaTime));
@@ -196,12 +232,12 @@ public class ArucoKeyboardController : MonoBehaviour
             : target;
     }
 
-    static float MarkerYaw(List<UnityHTTPServer.Corner> corners)
+    float MarkerYaw(List<UnityHTTPServer.Corner> corners)
     {
-        // Angle of the first marker edge in the image = the marker's in-plane rotation.
-        float dx = corners[1].x - corners[0].x;
-        float dy = corners[1].y - corners[0].y;
-        return Mathf.Atan2(dy, dx) * Mathf.Rad2Deg;
+        // Angle of the first marker edge (rotated to the chosen orientation).
+        Vector2 p0 = RotXY(corners[0].x, corners[0].y);
+        Vector2 p1 = RotXY(corners[1].x, corners[1].y);
+        return Mathf.Atan2(p1.y - p0.y, p1.x - p0.x) * Mathf.Rad2Deg;
     }
 
     void UpdateKeyStates(UnityHTTPServer.ExtraKeys ek)
@@ -223,8 +259,8 @@ public class ArucoKeyboardController : MonoBehaviour
         if (leftHand == null && rightHand == null) return;
         if (!_pianoSeen) return;
 
-        float lFree = ComputeFreeX(data.left_hand, ref _leftFreeX);
-        float rFree = ComputeFreeX(data.right_hand, ref _rightFreeX);
+        float lFree = ComputeFreeX(data.left_hand, ref _leftFreeX, leftAnchorX, -handAnchorFraction);
+        float rFree = ComputeFreeX(data.right_hand, ref _rightFreeX, rightAnchorX, handAnchorFraction);
 
         _pressedX.Clear();
         if (markerKeyIndices != null)
@@ -266,12 +302,19 @@ public class ArucoKeyboardController : MonoBehaviour
         }
     }
 
-    float ComputeFreeX(UnityHTTPServer.HandData hand, ref float stored)
+    float ComputeFreeX(UnityHTTPServer.HandData hand, ref float stored, float anchorX, float anchorFrac)
     {
         if (hand != null && hand.corners != null && hand.corners.Count > 0)
         {
-            float relX = Center(hand.corners).x - _pianoCenter.x;
-            stored = Mathf.Clamp(relX * handPxToLocal, -handTravelHalfWidth, handTravelHalfWidth);
+            // Frame centre -> keyboard centre; ±anchorFrac of the frame -> anchorX (octave centre).
+            float hx = Center(hand.corners).x;
+            _minHX = Mathf.Min(_minHX, hx); _maxHX = Mathf.Max(_maxHX, hx);
+            float nx = (autoCalibrate && _maxHX - _minHX > 1f)
+                ? Mathf.Clamp01(Mathf.InverseLerp(_minHX, _maxHX, hx))
+                : Mathf.Clamp01(hx / Mathf.Max(1f, referenceResolution.x));
+            float gain = Mathf.Abs(anchorFrac) > 1e-4f ? anchorX / anchorFrac : (2f * handTravelHalfWidth);
+            float fx = (nx - 0.5f + handCenterOffset) * gain * handSpanScale;
+            stored = Mathf.Clamp(fx, -handTravelHalfWidth, handTravelHalfWidth);
         }
         return stored;
     }
@@ -331,20 +374,33 @@ public class ArucoKeyboardController : MonoBehaviour
         return Mathf.Clamp01(y / Mathf.Max(1f, referenceResolution.y));
     }
 
-    static Vector2 Center(List<UnityHTTPServer.Corner> corners)
+    // Rotate a raw image point to compensate for the phone orientation.
+    Vector2 RotXY(float x, float y)
+    {
+        switch (imageRotation)
+        {
+            case ImageRotation.Rotate90:  return new Vector2(-y, x);
+            case ImageRotation.Rotate180: return new Vector2(-x, -y);
+            case ImageRotation.Rotate270: return new Vector2(y, -x);
+            default:                       return new Vector2(x, y);
+        }
+    }
+
+    Vector2 Center(List<UnityHTTPServer.Corner> corners)
     {
         float sx = 0f, sy = 0f;
-        foreach (var c in corners) { sx += c.x; sy += c.y; }
+        foreach (var c in corners) { var p = RotXY(c.x, c.y); sx += p.x; sy += p.y; }
         return new Vector2(sx / corners.Count, sy / corners.Count);
     }
 
-    static float ApparentSize(List<UnityHTTPServer.Corner> corners)
+    float ApparentSize(List<UnityHTTPServer.Corner> corners)
     {
         float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
         foreach (var c in corners)
         {
-            minX = Mathf.Min(minX, c.x); maxX = Mathf.Max(maxX, c.x);
-            minY = Mathf.Min(minY, c.y); maxY = Mathf.Max(maxY, c.y);
+            var p = RotXY(c.x, c.y);
+            minX = Mathf.Min(minX, p.x); maxX = Mathf.Max(maxX, p.x);
+            minY = Mathf.Min(minY, p.y); maxY = Mathf.Max(maxY, p.y);
         }
         return Mathf.Max(maxX - minX, maxY - minY);
     }
@@ -357,7 +413,12 @@ public class ArucoKeyboardController : MonoBehaviour
             case 1: return ek.key_1; case 2: return ek.key_2; case 3: return ek.key_3;
             case 4: return ek.key_4; case 5: return ek.key_5; case 6: return ek.key_6;
             case 7: return ek.key_7; case 8: return ek.key_8; case 9: return ek.key_9;
-            case 10: return ek.key_10; default: return null;
+            case 10: return ek.key_10; case 11: return ek.key_11; case 12: return ek.key_12;
+            case 13: return ek.key_13; case 14: return ek.key_14; case 15: return ek.key_15;
+            case 16: return ek.key_16; case 17: return ek.key_17; case 18: return ek.key_18;
+            case 19: return ek.key_19; case 20: return ek.key_20; case 21: return ek.key_21;
+            case 22: return ek.key_22; case 23: return ek.key_23; case 24: return ek.key_24;
+            default: return null;
         }
     }
 }
