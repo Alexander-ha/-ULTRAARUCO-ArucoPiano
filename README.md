@@ -1,4 +1,4 @@
-# ARUCONANOPIANO
+# ARUCONANOPIANO (ULTRAARUCO APPLICATION)
 ## Operation and Installation Guide with Application and Repository
 ## Table of Contents
 - [Installing the Application](#setup)
@@ -10,9 +10,18 @@
 - [Example of Operation](#workexample)
 - [Documentation for the Bridge Assets/UnityHTTPServer.cs](#bridgedoc)
 
+Please, refer to the following work:
+
 <a id="setup"></a>
 ### Installing the Application
-The application is installed in the form of an .apk file that was sent in the Telegram channel.
+The application is installed in the form of an .apk file. 
+To compile the .apk please follow the instruction:
+- proceed into flutter_app folder
+- run:
+  ```bash
+  flutter build apk --release --no-tree-shake-icons
+  ```
+  to obtain compiled app.
 The application is in the release build. The application name is camera_demo. After opening the .apk and tapping on the agreement, the application should appear on the desktop.
 
 <a id="installunity"></a>
@@ -109,7 +118,7 @@ If everything is done correctly, you will see a green inscription with a checkma
 > 1. **Your PC running the Unity server and your phone are NOT on the same Wi-Fi network**. Solution: connect to the same Wi-Fi.
 > 2. **Your PC has a Firewall running.** Solution: ubuntu ufw is disabled via sudo ufw disable, windows: netsh advfirewall set allprofiles state off.
 > 3. **You disabled the firewall via the terminal, but the network is identified as public instead of private** Solution: on Windows you can go to Control Panel\System and Security\Windows Defender Firewall and disable all firewalls.
-> 4. **Your Android version for some reason does not support current certificates** Solution: message me @altergan1, we'll figure something out.
+> 4. **Your Android version for some reason does not support current certificates** Solution: message me @altergan1 (Telegram, dimetranow@gmail.com GMAIL), we'll figure something out.
 
 <a id="arucoassign"></a>
 ### Assigning Aruco Markers to Keys, Hands, and Piano
