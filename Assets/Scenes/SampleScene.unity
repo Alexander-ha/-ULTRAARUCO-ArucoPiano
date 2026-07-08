@@ -275,7 +275,7 @@ MonoBehaviour:
   rightHandText: {fileID: 1705933017}
   pianoText: {fileID: 1400396570}
   extraKeysText: {fileID: 1408453482}
-  serverPort: 8081
+  serverPort: 8080
   showDebugLogs: 1
 --- !u!1 &410087039
 GameObject:
@@ -483,6 +483,57 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: New Text
+--- !u!1 &575598402
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 575598404}
+  - component: {fileID: 575598403}
+  m_Layer: 0
+  m_Name: ArucoTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &575598403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 575598402}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3775c9f64ceae14b91f58836e844b7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MinimalArucoTest
+  server: {fileID: 330585548}
+  viewCamera: {fileID: 330585545}
+  autoCalibrate: 1
+  referenceResolution: {x: 1280, y: 720}
+  watchKeyIndex: 1
+  smoothing: 14
+  boxSize: 90
+--- !u!4 &575598404
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 575598402}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 653.0988, y: 412.00922, z: -324.87823}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &732098915
 GameObject:
   m_ObjectHideFlags: 0
@@ -1073,7 +1124,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 0.9
+  orthographic size: 1.19
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -1272,3 +1323,4 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 1652903521}
   - {fileID: 732098918}
+  - {fileID: 575598404}

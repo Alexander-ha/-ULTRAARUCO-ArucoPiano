@@ -105,3 +105,12 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# --- ArucoNanoPiano (Piano branch) additions ---
+# Ultraleap is resolved from the OpenUPM registry via Packages/manifest.json,
+# so the embedded copy (90MB) is not committed.
+/Packages/com.ultraleap.tracking/
+
+# IDE / tooling
+.vsconfig
+*.slnx
