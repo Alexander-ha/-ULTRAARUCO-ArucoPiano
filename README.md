@@ -1,60 +1,58 @@
 # ARUCONANOPIANO
-## Инструкция по работе и установке с приложением и репозиторием
-## Оглавление
-- [Установка приложения](#setup)
-- [Установка репозитория в UnityProject](#installunity)
-- [Запуск тестового примера в UnityProject](#testlaunch)
-- [Подключение в приложении к серверу](#serverconnect)
-- [Назначение аруко-меток на клавишах, руках и пианино](#arucoassign)
-- [Проверка доступа к серверу в локальной сети](#checkaccess)
-- [Пример работы](#workexample)
-- [Документация по мосту Assets/UnityHTTPServer.cs](#bridgedoc)
+## Operation and Installation Guide with Application and Repository
+## Table of Contents
+- [Installing the Application](#setup)
+- [Installing the Repository in UnityProject](#installunity)
+- [Running the Test Example in UnityProject](#testlaunch)
+- [Connecting to the Server from the Application](#serverconnect)
+- [Assigning Aruco Markers to Keys, Hands, and Piano](#arucoassign)
+- [Checking Server Access on the Local Network](#checkaccess)
+- [Example of Operation](#workexample)
+- [Documentation for the Bridge Assets/UnityHTTPServer.cs](#bridgedoc)
 
 <a id="setup"></a>
-### Установка приложения
-Установка приложения проходит в формате .apk, который был отправлен в тг-канале.
-Приложение находится в release сборке. Название приложения camera_demo. После открытия .apk и тапа по согласию приложение должно появиться на рабочем столе.
+### Installing the Application
+The application is installed in the form of an .apk file that was sent in the Telegram channel.
+The application is in the release build. The application name is camera_demo. After opening the .apk and tapping on the agreement, the application should appear on the desktop.
+
 <a id="installunity"></a>
-### Установка репозитория в UnityProject
-Версия проекта:
+### Installing the Repository in UnityProject
+Project version:
 ```
 m_EditorVersion: 6000.5.0f1
 m_EditorVersionWithRevision: 6000.5.0f1 (88b47c5e7076)
 ```
-Установка через Git:
-Так как репозиторий приватный, убедитесь, что вы сконфигурировали токен на вашем локальном компьютере и в вашем гитхаб-аккаунте для доступа:
-[Официальная инструкция](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
-Как только все готово, можете клонировать:
+Installation via Git:
+Since the repository is private, make sure you have configured a token on your local computer and in your GitHub account for access:
+[Official instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
+Once everything is ready, you can clone:
 ```bash
 git clone https://github.com/Alexander-ha/ArucoNanoPiano-2026-06-19_03-18-33.git
-
 ```
-Далее запускаем юнити-хаб на вашем ПК.
+Next, launch Unity Hub on your PC.
 1. "Open" -> "Add Unity Project from disk"
-2. Указать папку с репозиторием
-3. double-click по проекту для открытия
-4. Дождаться Unity-импорта проекта.
+2. Specify the folder with the repository
+3. Double-click on the project to open it
+4. Wait for the Unity project import to complete.
 
 <a id="testlaunch"></a>
-### Запуск тестового примера в UnityProject
-> 📌 **Примечание:** Эти процессы не обязательны, если уже и так понятно что делать: можно сразу перейти к [Документация по мосту Assets/UnityHTTPServer.cs](#bridgedoc),
-> чтобы использовать функции http-доступа, а также к  [Подключение в приложении к серверу](#serverconnect) и [Пример работы](#workexample).
+### Running the Test Example in UnityProject
+> 📌 **Note:** These processes are not required if you already know what to do: you can skip directly to the [Documentation for the Bridge Assets/UnityHTTPServer.cs](#bridgedoc),
+> to use HTTP access functions, as well as to [Connecting to the Server from the Application](#serverconnect) and [Example of Operation](#workexample).
 
+If the installation was successful, you will see the following in the SampleScene scene window:
+![image 1, scene](arcuopianoinstr/inspectorinstr0.png)
 
-Если установка прошла успешно, то вы увидите следующее в поле сцены SampleScene:
-![изобр. 1, сцена](arcuopianoinstr/inspectorinstr0.png)
+Here you can see that in the Canvas tree there is a Panel, followed by several Text objects.
+In the example we will use, everything is simple: 5 text fields are placed on the panel.
 
-Здесь можно увидеть, что в дереве Canvas есть Panel, а потом наследуется несколько объектов типа Text. 
-В примере, который мы будем юзать - сделано все просто, на панель насажено 5 текстовых полей.
+On the right side in the inspector you can see the following:
+![image 1, inspector](arcuopianoinstr/inspectorinstr1.png)
 
-В правой части в инспекторе можно видеть следующее:
-![изобр. 1, инспектор](arcuopianoinstr/inspectorinstr1.png)
-
-
-Это основной скрипт Assets/UnityHTTPServer ([ссылка на него в репозитории](Assets/UnityHTTPServer.cs).
-Он добавлен как Component к MainCamera.
-Здесь по списку:
-1. Поля для текста (на сцене в них буду заноситься значения, парсящиеся по http-запросу), сами объекты полей закидываем из левой панели сцены (те что под Canvas, если они не закидываются).
+This is the main script Assets/UnityHTTPServer ([link to it in the repository](Assets/UnityHTTPServer.cs)).
+It is added as a Component to the MainCamera.
+Here in order:
+1. Fields for text (on the scene values from the HTTP request will be parsed into them). The text field objects themselves are dragged from the left side of the scene (those under Canvas, if they haven't been dragged yet).
 ```cs
     public Text statusText;
     public Text leftHandText;
@@ -62,103 +60,98 @@ git clone https://github.com/Alexander-ha/ArucoNanoPiano-2026-06-19_03-18-33.git
     public Text pianoText;
     public Text extraKeysText;
 ```
-2. Порт. Обязательно укажите именно свободный порт.
+2. Port. Be sure to specify a free port.
 
-Как только все будет сконфигурировано, можно жать ▶, сервер заработает и будет слушать порт, указанный вами (по умолчанию 8081).
-
+Once everything is configured, press ▶, the server will start and listen on the port you specified (default is 8081).
 
 <a id="serverconnect"></a>
-### Подключение в приложении к серверу
-Теперь, когда сервер запущен, вызовите в cmd вашего ПК следующее:
+### Connecting to the Server from the Application
+Now that the server is running, run the following in your PC's cmd:
 ```bash
 ipconfig
 
 >
-Адаптер беспроводной локальной сети Беспроводная сеть:
+Wireless LAN adapter Wi-Fi:
 
-   DNS-суффикс подключения . . . . . : Dlink
-   Локальный IPv6-адрес канала . . . : fe80::d55e:1f9e:3655:ebc4%9
-   IPv4-адрес. . . . . . . . . . . . : 192.168.0.138
-   Маска подсети . . . . . . . . . . : 255.255.255.0
-   Основной шлюз. . . . . . . . . : 192.168.0.1
+   Connection-specific DNS Suffix . . . . . . : Dlink
+   Link-local IPv6 Address . . . . . . . . : fe80::d55e:1f9e:3655:ebc4%9
+   IPv4 Address. . . . . . . . . . . . . . : 192.168.0.138
+   Subnet Mask . . . . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . . . . : 192.168.0.1
 
-Адаптер Ethernet outline-tap0:
+Ethernet adapter outline-tap0:
 
-   Состояние среды. . . . . . . . : Среда передачи недоступна.
-   DNS-суффикс подключения . . . . . :
+   Media State . . . . . . . . . . . . . . : Media disconnected
+   Connection-specific DNS Suffix . . . . . :
 
-Адаптер Ethernet Сетевое подключение Bluetooth:
+Ethernet adapter Bluetooth Network Connection:
 
-   Состояние среды. . . . . . . . : Среда передачи недоступна.
-   DNS-суффикс подключения . . . . . :
+   Media State . . . . . . . . . . . . . . : Media disconnected
+   Connection-specific DNS Suffix . . . . . :
 ```
 
-Из того, что вы получите, вам будет нужен именно IPv4-адрес. 
+From what you get, you will need the IPv4 address.
 
-Перейдите в приложение camera_demo.apk, **которое вы скачали на ваш телефон**.
+Go to the camera_demo.apk application, **which you downloaded to your phone**.
 
-![изобр 3. меню](arcuopianoinstr/Screenshot_2026-06-21-23-10-56-646_com.example.flora_nano_aruco.jpg)
+![image 3. menu](arcuopianoinstr/Screenshot_2026-06-21-23-10-56-646_com.example.flora_nano_aruco.jpg)
 
-В приложении нажмите Connect to Local Server.
+In the application, tap Connect to Local Server.
 
-![изобр 4. коннект](arcuopianoinstr/Screenshot_2026-06-21-22-40-37-466_com.example.flora_nano_aruco.jpg)
+![image 4. connect](arcuopianoinstr/Screenshot_2026-06-21-22-40-37-466_com.example.flora_nano_aruco.jpg)
 
-Введите ваш IPv4 адресс ПК-сервера на юнитии в **локальной wi-fi сети**, а также порт, который указали при запуске скрипта.
+Enter your PC server's IPv4 address on the Unity server in the **local Wi-Fi network**, as well as the port you specified when starting the script.
 
-Если все сделано верно - вы увидите зеленую надпись с галочкой, где будет указано, что вы подключились.
+If everything is done correctly, you will see a green inscription with a checkmark indicating that you are connected.
 
 > [!WARNING]
-> Типичные проблемы которые могут привести к неудачному подключению:
-> 1. **Ваш ПК, на котором работает unity-server и ваш телефон находятся НЕ в одной  Wi-Fi сети**. Решение: подключиться к одному Wi-Fi.
-> 2. **На вашем ПК работает Брандмауэр.** Решение: ufw ubuntu отключается через sudo ufw disable, windows: netsh advfirewall set allprofiles state off.
-> 3. **Вы отключили брандмауэр через терминал, но сеть индентифицируется не как домашняя, а как общая** Решение: на Windows можно зайти Панель управления\Система и безопасность\Брандмауэр Защитника Windows и поотключать к хуям все брандмауэры.
-> 4. **Ваша версия андроид по какой-то причине не поддерживает текущие сертификаты** Решение: написать мне @altergan1, что нибудь придумаем.
-
-
-
-
+> Typical problems that can lead to unsuccessful connection:
+> 1. **Your PC running the Unity server and your phone are NOT on the same Wi-Fi network**. Solution: connect to the same Wi-Fi.
+> 2. **Your PC has a Firewall running.** Solution: ubuntu ufw is disabled via sudo ufw disable, windows: netsh advfirewall set allprofiles state off.
+> 3. **You disabled the firewall via the terminal, but the network is identified as public instead of private** Solution: on Windows you can go to Control Panel\System and Security\Windows Defender Firewall and disable all firewalls.
+> 4. **Your Android version for some reason does not support current certificates** Solution: message me @altergan1, we'll figure something out.
 
 <a id="arucoassign"></a>
-### Назначение аруко-меток на клавишах, руках и пианино
-Как только вы подключитесь, перед вами сразу же откроется экран выбора клавиш. Если нет: пикните в главном меню Enter ArUco ID.
+### Assigning Aruco Markers to Keys, Hands, and Piano
+Once you connect, the key selection screen will open immediately. If not: tap Enter ArUco ID in the main menu.
 
-![изобр 5. клавиши](arcuopianoinstr/Screenshot_2026-06-22-00-52-01-479_com.example.flora_nano_aruco.jpg)
+![image 5. keys](arcuopianoinstr/Screenshot_2026-06-22-00-52-01-479_com.example.flora_nano_aruco.jpg)
 
-Здесь вы можете:
-1. указать аруко-метку на левой руке (Left Hand ID)
-2. указать аруко-метку на правой руке (Right Hand ID)
-3. указать аруко-метку на пианино (Piano ID)
-4. через add key + добавить неограниченное количество меток на клавиши, каждой присвоив id, который обозначает ваша конкретная аруко-метка.
+Here you can:
+1. specify the Aruco marker on the left hand (Left Hand ID)
+2. specify the Aruco marker on the right hand (Right Hand ID)
+3. specify the Aruco marker on the piano (Piano ID)
+4. via add key + add an unlimited number of markers on keys, each assigned an ID that denotes your specific Aruco marker.
+
 <a id="checkaccess"></a>
-### Проверка доступа к серверу в локальной сети
+### Checking Server Access on the Local Network
 
-Хорошей вариантом при отсутсвии подключения является проверить, имеется ли доступ к вашему ПК-серверу unity в целом: 
-для этого можно вбить ip и порт прямо в браузер: http://192.168.0.138:8081/
-И вы увидите, есть ли у вас доступ.
-Если нет - вернитесь к разделу Warning в [Подключение в приложении к серверу](#serverconnect). 
+A good option if there is no connection is to check whether access to your Unity PC server is available in general:
+to do this, you can enter the IP and port directly into the browser: http://192.168.0.138:8081/
+And you will see if you have access.
+If not - return to the Warning section in [Connecting to the Server from the Application](#serverconnect).
 
 <a id="workexample"></a>
-### Пример работы
-Если все сконфигурировано правильно вы можете нажать Open Camera в вашем приложении и разрешить к ней доступ.
-После чего вы сможете тыкать метки (пример на фото):
+### Example of Operation
+If everything is configured correctly, you can tap Open Camera in your application and grant access to it.
+After that, you can touch markers (example in the photo):
 
-![тык1](arcuopianoinstr/Screenshot_2026-06-21-23-39-36-447_com.example.flora_nano_aruco.jpg)
+![touch1](arcuopianoinstr/Screenshot_2026-06-21-23-39-36-447_com.example.flora_nano_aruco.jpg)
 
-![тык2](arcuopianoinstr/Screenshot_2026-06-22-00-52-54-088_com.example.flora_nano_aruco.jpg)
+![touch2](arcuopianoinstr/Screenshot_2026-06-22-00-52-54-088_com.example.flora_nano_aruco.jpg)
 
-На сервере же вы увидите следующее:
-![серв](arcuopianoinstr/instructionarucopiano.png)
+On the server you will see the following:
+![server](arcuopianoinstr/instructionarucopiano.png)
 
 > [!NOTE]
-> 1. **Метки отправляются на сервер только в формате x,y координат границ бокса. Если нужна координата z-используйте trick c вычислением глубины на самом сервере(код придется писать отдельно).**
-> 2. **Если метку не видно - на сервер приходит null**
-> 3. **Кортеж extraKeys имеет произвольный размер в зависимости от того, сколько клавиш вы назначили в приложении на Android**
+> 1. **Markers are sent to the server only in the format of x,y coordinates of the bounding box corners. If the z coordinate is needed, use the trick of calculating depth on the server itself (the code will have to be written separately).**
+> 2. **If the marker is not visible, null is sent to the server**
+> 3. **The extraKeys tuple has arbitrary size depending on how many keys you assigned in the Android application**
 
-Пример передаваемого json:
+Example transmitted json:
 
 ```json
-1. Видим все маркеры:
-json
+1. We see all markers:
 {
   "left_hand": {
     "id": 1,
@@ -179,8 +172,7 @@ json
     }
   }
 }
-2. Не видим left_hand и key_4 (но остальные видны):
-json
+2. We do not see left_hand and key_4 (but the rest are visible):
 {
   "left_hand": null,
   "right_hand": {
@@ -197,20 +189,20 @@ json
 }
 ```
 
-
 <a id="bridgedoc"></a>
-### Документация по мосту Assets/UnityHTTPServer.cs
-Основной скрипт, позволяющий конфигурировать доступ по http валяется в assets, это UnityHTTPServer.cs. Он дает стандартный доступ к GET-запросам, наследуется от MonoBehaviour.
-## 📋 Публичные методы
+### Documentation for the Bridge Assets/UnityHTTPServer.cs
+The main script that allows configuring HTTP access is located in assets, it is UnityHTTPServer.cs. It provides standard access to GET requests, inherits from MonoBehaviour.
+
+## 📋 Public Methods
 
 ### `StartHTTPServer()`
-Запускает http-сервер на указанном порту.
+Starts the HTTP server on the specified port.
 
 ```csharp
 public void StartHTTPServer()
 ```
 
-**Пример:**
+**Example:**
 ```csharp
 UnityHTTPServer server = GetComponent<UnityHTTPServer>();
 server.StartHTTPServer();
@@ -219,17 +211,17 @@ server.StartHTTPServer();
 ---
 
 ### `ProcessReceivedData(string jsonData)`
-обрабатывает получаемый json, обновляет юзео-интерфейс (через переданные текстовые поля).
+Processes the incoming JSON, updates the user interface (via the passed text fields).
 
 ```csharp
 public void ProcessReceivedData(string jsonData)
 ```
 
-| Параметр | Тип | Описание |
-|----------|-----|----------|
-| `jsonData` | `string` | JSON-строка с данными жестов |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `jsonData` | `string` | JSON string with gesture data |
 
-**Пример:**
+**Example:**
 ```csharp
 server.ProcessReceivedData("{\"left_hand\":{\"corners\":[{\"x\":100,\"y\":200}]}}");
 ```
@@ -237,70 +229,70 @@ server.ProcessReceivedData("{\"left_hand\":{\"corners\":[{\"x\":100,\"y\":200}]}
 ---
 
 ### `UpdateUI(RootObject data)`
-Обновляет все UI-элементы на основе полученных данных.
+Updates all UI elements based on the received data.
 
 ```csharp
 public void UpdateUI(RootObject data)
 ```
 
-| Параметр | Тип | Описание |
-|----------|-----|----------|
-| `data` | `RootObject` | Десериализованный объект с данными |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `data` | `RootObject` | Deserialized object with data |
 
 ---
 
 ### `CalculateCenter(List<Corner> corners)`
-Вычисляет центр объекта по списку угловых точек. (может сгодиться для позиционирования.)
+Calculates the center of an object from a list of corner points. (may be useful for positioning.)
 
 ```csharp
 public Vector2 CalculateCenter(List<Corner> corners)
 ```
 
-| Параметр | Тип | Описание |
-|----------|-----|----------|
-| `corners` | `List<Corner>` | Список точек (x, y) |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `corners` | `List<Corner>` | List of points (x, y) |
 
-**Возвращает:** `Vector2` — центр объекта.
+**Returns:** `Vector2` — the center of the object.
 
-**Пример:**
+**Example:**
 ```csharp
 Vector2 center = CalculateCenter(handData.corners);
-Debug.Log($"Центр: ({center.x}, {center.y})");
+Debug.Log($"Center: ({center.x}, {center.y})");
 ```
 
 ---
 
 ### `GetLocalIPAddress()`
-Получает локальный IP-адрес компьютера (авто-конфиг айпишника).
+Gets the local IP address of the computer (auto IP configuration).
 
 ```csharp
 public string GetLocalIPAddress()
 ```
 
-**Возвращает:** `string` — IP-адрес (например, `192.168.1.100`).
+**Returns:** `string` — IP address (e.g., `192.168.1.100`).
 
-**Пример:**
+**Example:**
 ```csharp
 string ip = GetLocalIPAddress();
-statusText.text = $"Сервер: http://{ip}:8080/";
+statusText.text = $"Server: http://{ip}:8080/";
 ```
 
 ---
 
-## 🔒 Приватные методы
+## 🔒 Private Methods
 
-| Метод | Описание |
-|-------|----------|
-| `HandleRequests()` | корутина для асинхронной обработки запросов |
-| `ProcessRequest(IAsyncResult result)` | обработка на входящий HTTP-запрос |
-| `Update()` | апдейт каждый кадр |
+| Method | Description |
+|--------|-------------|
+| `HandleRequests()` | coroutine for asynchronous request processing |
+| `ProcessRequest(IAsyncResult result)` | handles incoming HTTP request |
+| `Update()` | update every frame |
 
 ---
 
-## 📦 вложенные классы
+## 📦 Nested Classes
 
 ### `Corner`
-точка.
+point.
 
 ```csharp
 public class Corner
@@ -311,7 +303,7 @@ public class Corner
 ```
 
 ### `HandData`
-рука.
+hand.
 
 ```csharp
 public class HandData
@@ -322,7 +314,7 @@ public class HandData
 ```
 
 ### `PianoData`
-пиаинино.
+piano.
 
 ```csharp
 public class PianoData
@@ -333,7 +325,7 @@ public class PianoData
 ```
 
 ### `KeyData`
-клавиша.
+key.
 
 ```csharp
 public class KeyData
@@ -344,19 +336,19 @@ public class KeyData
 ```
 
 ### `ExtraKeys`
-контейнер для клавиш.
+container for keys.
 
 ```csharp
 public class ExtraKeys
 {
     public KeyData key_1;
     public KeyData key_2;
-    // ... до key_10
+    // ... up to key_10
 }
 ```
 
 ### `RootObject`
-корень JSON.
+JSON root.
 
 ```csharp
 public class RootObject
@@ -370,100 +362,98 @@ public class RootObject
 
 ---
 
-## 🎯 Пример использования
+## 🎯 Example Usage
 
 ```csharp
-// получение сервера
+// get the server
 UnityHTTPServer server = GetComponent<UnityHTTPServer>();
 
-// запуск его с текущими параметрами
+// start it with current parameters
 server.StartHTTPServer();
 
-// геттер на апйишник (можем получить )
+// getter for IP (we can get it)
 string ip = server.GetLocalIPAddress();
-Debug.Log($"Сервер запущен на {ip}:8080");
+Debug.Log($"Server started on {ip}:8080");
 
-// ручная десериализация
+// manual deserialization
 string json = "{\"left_hand\":{\"corners\":[{\"x\":100,\"y\":200}]}}";
 server.ProcessReceivedData(json);
 
-// барицентр
+// barycenter
 List<Corner> corners = new List<Corner>();
 corners.Add(new Corner { x = 0, y = 0 });
 corners.Add(new Corner { x = 100, y = 100 });
 Vector2 center = server.CalculateCenter(corners);
-Debug.Log($"Центр: {center}");
+Debug.Log($"Center: {center}");
 ```
 
 ---
 
-## ⚡ Unity-события
-дефолтные события
-| Событие | Когда вызывается |
-|---------|------------------|
-| `Start()` | запустилась сцена - запустился сервер |
-| `Update()` | Каждый кадр — обрабатывает полученные данные |
-| `OnDestroy()` | стоп - уничтожение объекта сервера из памяти|
-
-
+## ⚡ Unity Events
+default events
+| Event | When called |
+|-------|-------------|
+| `Start()` | scene started - server started |
+| `Update()` | Every frame — processes received data |
+| `OnDestroy()` | stop - destroying the server object from memory|
 
 ---
 
-# 🎹 Ветка `Piano` — 3D-визуализация пианино и рук
+# 🎹 `Piano` Branch — 3D Visualization of Piano and Hands
 
-Эта ветка расширяет проект полноценной 3D-сценой: маркеры с телефона (через тот же
-HTTP-мост `UnityHTTPServer.cs`) управляют **моделью пианино**, **нажатием клавиш** и
-**двумя руками с многопальцевым нажатием аккордов**.
+This branch extends the project with a full 3D scene: markers from the phone (via the same
+HTTP bridge `UnityHTTPServer.cs`) control the **piano model**, **key presses**, and
+**two hands with multi-finger chord pressing**.
 
-## Зависимости
+## Dependencies
 - **Unity 6000.5.0f1**, URP.
-- **Ultraleap Tracking 7.3.0** — ставится автоматически из реестра **OpenUPM**
-  (`scopedRegistries` уже прописан в `Packages/manifest.json`), при первом открытии проекта
-  Unity скачает его сам. Используется только меш-риг руки **Ghost Hands** (без оборудования Leap).
-  > ⚠️ Если на Unity 6.5 появится ошибка `CS0619: GetInstanceID is obsolete` из
-  > `com.ultraleap.tracking/Core/Editor/Scripts/EditorUtils.cs` — закомментируйте две строки с
-  > `GetInstanceID()` (строки ~33 и ~56) или замените на `GetEntityID()`. Это известная
-  > несовместимость пакета с Unity 6.5.
-- **Newtonsoft Json** (уже в зависимостях).
+- **Ultraleap Tracking 7.3.0** — installs automatically from the **OpenUPM** registry
+  (`scopedRegistries` already specified in `Packages/manifest.json`), Unity will download it on the first
+  project opening. Only the **Ghost Hands** hand mesh rig is used (without Leap hardware).
+  > ⚠️ If on Unity 6.5 you get the error `CS0619: GetInstanceID is obsolete` from
+  > `com.ultraleap.tracking/Core/Editor/Scripts/EditorUtils.cs` — comment out the two lines with
+  > `GetInstanceID()` (lines ~33 and ~56) or replace with `GetEntityID()`. This is a known
+  > incompatibility of the package with Unity 6.5.
+- **Newtonsoft Json** (already in dependencies).
 
-## Структура наших файлов
-- `Assets/ArucoPiano3D/` — рантайм-скрипты и редакторные тулзы:
-  - `ArucoKeyboardController.cs` — главный контроллер (позиция пианино, состояние клавиш, руки).
-  - `PianoKey3D.cs` — клавиша (анимация нажатия + точки контакта края/центра).
-  - `GhostHandRig.cs` — драйвер руки: 5 пальцев с CCD-IK, аккорды, раздача пальцев без перекреста.
-  - `Hand3D.cs`, `HandDriverBase.cs` — простая кубическая рука и общий базовый класс.
-  - `Editor/` — билдеры и инспекторы (см. меню `Tools ▸ ArucoPiano`).
-- `Assets/Piano/` — модель пианино (`Piano.fbx`).
-- `Assets/MinimalArucoTest.cs` — минимальный 2D-оверлей для smoke-теста моста.
-- `Assets/Scenes/PianoModel.unity` — основная 3D-сцена.
+## File Structure
+- `Assets/ArucoPiano3D/` — runtime scripts and editor tools:
+  - `ArucoKeyboardController.cs` — main controller (piano position, key states, hands).
+  - `PianoKey3D.cs` — key (press animation + edge/center contact points).
+  - `GhostHandRig.cs` — hand driver: 5 fingers with CCD-IK, chords, finger spreading without crossing.
+  - `Hand3D.cs`, `HandDriverBase.cs` — simple cube hand and common base class.
+  - `Editor/` — builders and inspectors (see menu `Tools ▸ ArucoPiano`).
+- `Assets/Piano/` — piano model (`Piano.fbx`).
+- `Assets/MinimalArucoTest.cs` — minimal 2D overlay for smoke-testing the bridge.
+- `Assets/Scenes/PianoModel.unity` — main 3D scene.
 
-## Быстрый старт
-1. Откройте проект в Unity 6000.5.0f1, дождитесь импорта (Ultraleap скачается из OpenUPM).
-2. Меню **`Tools ▸ ArucoPiano ▸ Build 3D Piano Model Scene`** — создаёт `Assets/Scenes/PianoModel.unity`:
-   модель пианино, одна камера сверху, 10 интерактивных клавиш (2 группы по 4 белых + 1 чёрная).
-3. Меню **`Tools ▸ ArucoPiano ▸ Add Ghost Hands To Scene`** — добавляет две Ghost-руки и подключает их.
-4. Меню **`Tools ▸ ArucoPiano ▸ Recolor Hands (Skin)`** — красит руки в цвет кожи.
-5. Запустите сервер (▶ Play). В приложении на телефоне (см. инструкцию выше) подключитесь к серверу и
-   назначьте маркеры: **Piano ID**, **10 клавиш** (`key_1..key_10`, слева направо), **Left/Right Hand ID**.
-6. Откройте камеру, наведите на маркеры.
+## Quick Start
+1. Open the project in Unity 6000.5.0f1, wait for import (Ultraleap will download from OpenUPM).
+2. Menu **`Tools ▸ ArucoPiano ▸ Build 3D Piano Model Scene`** — creates `Assets/Scenes/PianoModel.unity`:
+   piano model, one top camera, 10 interactive keys (2 groups of 4 white + 1 black).
+3. Menu **`Tools ▸ ArucoPiano ▸ Add Ghost Hands To Scene`** — adds two Ghost hands and connects them.
+4. Menu **`Tools ▸ ArucoPiano ▸ Recolor Hands (Skin)`** — colors the hands skin color.
+5. Start the server (▶ Play). In the phone app (see instructions above) connect to the server and
+   assign markers: **Piano ID**, **10 keys** (`key_1..key_10`, left to right), **Left/Right Hand ID**.
+6. Open the camera, point at the markers.
 
-## Логика
-- **Пианино** двигается в квадратной зоне на полу (X,Y из кадра + глубина из размера метки) и
-  **вращается только по реальному маркеру** (yaw из углов метки).
-- **Клавиша** нажимается (наклон + оранжевая подсветка) только если до неё **реально дотянулся палец**.
-- **Руки**: ближайшая рука подъезжает (≤5 см от позиции маркера) к нажатым клавишам; пальцы тянутся к
-  своим точкам нажатия через CCD-IK; держится **аккорд** из нескольких пальцев; пальцы раздаются с
-  сохранением порядка (без перекрещивания). Большой палец — край белой клавиши, остальные — центр;
-  чёрные — край (указательным–мизинцем). В покое указательный–мизинец слегка согнуты.
+## Logic
+- **Piano** moves within a square zone on the floor (X,Y from the frame + depth from marker size) and
+  **rotates only according to the real marker** (yaw from marker corners).
+- **Key** is pressed (tilt + orange highlight) only if a finger **actually reaches it**.
+- **Hands**: the nearest hand moves (≤5 cm from marker position) to the pressed keys; fingers reach for
+  their press points via CCD-IK; holds a **chord** of multiple fingers; fingers are spread while
+  maintaining order (without crossing). Thumb — edge of the white key, the rest — center;
+  black keys — edge (index–pinky). At rest, the index–pinky are slightly bent.
 
-## Тюнинг (инспектор)
+## Tuning (Inspector)
 - `ArucoKeyboardController`: `Zone Size`, `Hand Reach`, `Hand Px To Local`, `Height Min/Max`, `Yaw Sign`.
-- `GhostHandRig` (на `GhostHand_L`/`GhostHand_R`): `Max Pull` (≤5 см подтягивания), `Max Reach`,
+- `GhostHandRig` (on `GhostHand_L`/`GhostHand_R`): `Max Pull` (≤5 cm pulling), `Max Reach`,
   `Contact Threshold`, `Idle Curl Angle`, `Move Speed`.
-- `PianoKey3D`: `Edge/Center Fraction` (место нажатия вдоль клавиши), `Press Angle`.
+- `PianoKey3D`: `Edge/Center Fraction` (press location along the key), `Press Angle`.
 
-## Полезные меню (`Tools ▸ ArucoPiano`)
+## Useful Menus (`Tools ▸ ArucoPiano`)
 - `Build 3D Piano Model Scene` / `Add Ghost Hands To Scene` / `Recolor Hands (Skin)`.
-- `Convert Piano Materials to URP` — если модель пианино рендерится розовой (Standard-шейдер в URP).
-- `Inspect Piano Model` / `Inspect Ghost Hand` — лог иерархии (для отладки привязок).
-- `Build Demo Scene` / `Setup Minimal Visual Test` — старые кубические сцены и 2D-оверлей для smoke-теста.
+- `Convert Piano Materials to URP` — if the piano model renders pink (Standard shader in URP).
+- `Inspect Piano Model` / `Inspect Ghost Hand` — log hierarchy (for debugging bindings).
+- `Build Demo Scene` / `Setup Minimal Visual Test` — old cube scenes and 2D overlay for smoke-testing.
