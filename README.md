@@ -23,6 +23,7 @@ To compile the .apk please follow the instruction:
   ```
   to obtain compiled app.
 The application is in the release build. The application name is camera_demo. After opening the .apk and tapping on the agreement, the application should appear on the desktop.
+Recommended version of flutter 3.32.8 and higher.
 
 <a id="installunity"></a>
 ### Installing the Repository in UnityProject
